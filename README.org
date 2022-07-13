@@ -15,14 +15,12 @@ Grabbed some code from ~_sounddevice.py~ to ~_ffi_test.py~.
 ** Result
 #+begin_src sh
   # C version will work
-  $ cd c-version
-  $ sudo docker build -t ffi-test:c .
+  $ sudo docker build -t ffi-test:c c-version
   $ sudo docker run ffi-test:c
   ---- This is stdout ----
   ---- Before changing stderr ----
   # Python version will occurs segmentation fault
-  $ cd ../python-version
-  $ sudo docker build -t ffi-test:python .
+  $ sudo docker build -t ffi-test:python python-version
   $ sudo docker run ffi-test:python
   $ echo $?
   139
