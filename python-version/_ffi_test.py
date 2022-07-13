@@ -9,6 +9,7 @@ ffibuilder.cdef("""
     int fclose(FILE* fp);
     extern FILE *const stderr;  /* GNU C library */
     extern FILE* __stderrp;  /* macOS */
+    #define stderr (stderr)
 """)
 
 if __name__ == '__main__':
