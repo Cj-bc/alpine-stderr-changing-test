@@ -1,0 +1,45 @@
+* Test codes for spatialaudio/python-sounddevice#90
+This directory contains C and python codes for my comment on [[https://github.com/spatialaudio/python-sounddevice/issues/90][spatialaudio/python-sounddevice #90]].
+
+Both of C/python codes aims to do the same thing, but 
+python one doesn't work while C one will work.
+
+** C code overview
+Simply include ~stdio.h~ and ~freopen~ to re-connect stderr to ~/dev/null~.
+This uses native ~stdio.h~.
+
+** Python code overview
+Uses cffi to generate ffi binding and try to do the same thing as 'C code'.
+Grabbed some code from ~_sounddevice.py~ to ~_ffi_test.py~.
+
+** Result
+#+begin_src sh
+  # C version will work
+  $ cd c-version
+  $ sudo docker build -t ffi-test:c .
+  $ sudo docker run ffi-test:c
+  ---- This is stdout ----
+  ---- Before changing stderr ----
+  # Python version will occurs segmentation fault
+  $ cd ../python-version
+  $ sudo docker build -t ffi-test:python .
+  $ sudo docker run ffi-test:python
+  $ echo $?
+  139
+#+end_src
+
+** My thought about this
+I think the problem is that ~_ffi_test.py~ uses different definition of
+~stderr~ from musl's.
+
+musl's stderr definition is below:
+
+#+begin_src c
+  ...
+  extern FILE *const stderr;
+  ...
+  #define stderr (stderr)
+  ...
+#+end_src
+
+More in [[https://github.com/spatialaudio/python-sounddevice/issues/90#issuecomment-1173475736][my previous comment on issue]].
