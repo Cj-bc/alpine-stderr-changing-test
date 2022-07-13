@@ -41,3 +41,80 @@ musl's stderr definition is below:
 #+end_src
 
 More in [[https://github.com/spatialaudio/python-sounddevice/issues/90#issuecomment-1173475736][my previous comment on issue]].
+
+** Other version I tried
+*** Try1: use ~FILE *const~ as stderr definition in _ffi_test.py
+I tried to modify ~_ffi_test.py~ to match musl's ~stderr~ definition (in cd076ea, tag ~try1~),
+
+#+begin_src diff
+  diff --git a/python-version/_ffi_test.py b/python-version/_ffi_test.py
+  index a30446a..1d9934b 100644
+  --- a/python-version/_ffi_test.py
+  +++ b/python-version/_ffi_test.py
+  @@ -7,7 +7,7 @@ ffibuilder.cdef("""
+       /* from stdio.h */
+       FILE* fopen(const char* path, const char* mode);
+       int fclose(FILE* fp);
+  -    extern FILE* stderr;  /* GNU C library */
+  +    extern FILE *const stderr;  /* GNU C library */
+       extern FILE* __stderrp;  /* macOS */
+#+end_src
+
+and it didn't allow me to do ~setattr~
+
+#+begin_src sh
+  $ git checkout try1
+  $ sudo docker build ffi-test:python-try1 python-version
+  $ sudo docker run ffi-test:python-try1
+  Traceback (most recent call last):
+    File "/workdir/stderr-changing.py", line 7, in <module>
+      setattr(stdio, 'stderr', devnull)
+  AttributeError: cannot write to function or constant 'stderr'
+#+end_src
+*** Try2: Include ~#define~ in _ffi_test.py
+I tried to include ~#define~ too (in cf92a3e, tag ~try2~),
+
+#+begin_src  diff
+  diff --git a/python-version/_ffi_test.py b/python-version/_ffi_test.py
+  index 1d9934b..b7137bc 100644
+  --- a/python-version/_ffi_test.py
+  +++ b/python-version/_ffi_test.py
+  @@ -9,6 +9,7 @@ ffibuilder.cdef("""
+       int fclose(FILE* fp);
+       extern FILE *const stderr;  /* GNU C library */
+       extern FILE* __stderrp;  /* macOS */
+  +    #define stderr (stderr)
+   """)
+
+   if __name__ == '__main__':
+#+end_src
+
+but it wasn't supported by cffi:
+
+#+begin_src sh
+  $ git checkout try2
+  $ sudo docker build ffi-test:python-try2 python-version
+  $ sudo docker run ffi-test:python-try2
+  WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+  WARNING: You are using pip version 22.0.4; however, version 22.1.2 is available.
+  You should consider upgrading via the '/usr/local/bin/python -m pip install --upgrade pip' command.
+  Traceback (most recent call last):
+    File "/workdir/_ffi_test.py", line 6, in <module>
+      ffibuilder.cdef("""
+    File "/usr/local/lib/python3.9/site-packages/cffi/api.py", line 112, in cdef
+      self._cdef(csource, override=override, packed=packed, pack=pack)
+    File "/usr/local/lib/python3.9/site-packages/cffi/api.py", line 126, in _cdef
+      self._parser.parse(csource, override=override, **options)
+    File "/usr/local/lib/python3.9/site-packages/cffi/cparser.py", line 389, in parse
+      self._internal_parse(csource)
+    File "/usr/local/lib/python3.9/site-packages/cffi/cparser.py", line 396, in _internal_parse
+      self._process_macros(macros)
+    File "/usr/local/lib/python3.9/site-packages/cffi/cparser.py", line 479, in _process_macros
+      raise CDefError(
+  cffi.CDefError: only supports one of the following syntax:
+    #define stderr ...     (literally dot-dot-dot)
+    #define stderr NUMBER  (with NUMBER an integer constant, decimal/hex/octal)
+  got:
+    #define stderr (stderr)
+#+end_src
+
