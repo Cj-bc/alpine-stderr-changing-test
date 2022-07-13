@@ -44,7 +44,7 @@ More in [[https://github.com/spatialaudio/python-sounddevice/issues/90#issuecomm
 
 ** Other version I tried
 *** Try1: use ~FILE *const~ as stderr definition in _ffi_test.py
-I tried to modify ~_ffi_test.py~ to match musl's ~stderr~ definition (in cd076ea, tag ~try1~),
+I tried to modify ~_ffi_test.py~ to match musl's ~stderr~ definition (in [[https://github.com/Cj-bc/alpine-stderr-changing-test/commit/cd076ea8b0881ea1ea88bf68c5d23e4fedc1dd2a][cd076ea]], tag ~try1~),
 
 #+begin_src diff
   diff --git a/python-version/_ffi_test.py b/python-version/_ffi_test.py
@@ -72,7 +72,7 @@ and it didn't allow me to do ~setattr~
   AttributeError: cannot write to function or constant 'stderr'
 #+end_src
 *** Try2: Include ~#define~ in _ffi_test.py
-I tried to include ~#define~ too (in cf92a3e, tag ~try2~),
+I tried to include ~#define~ too (in [[https://github.com/Cj-bc/alpine-stderr-changing-test/commit/cf92a3ef57f3f663e26b52415a4ef57fcc71bb70][cf92a3e]], tag ~try2~),
 
 #+begin_src  diff
   diff --git a/python-version/_ffi_test.py b/python-version/_ffi_test.py
